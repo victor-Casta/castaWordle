@@ -1,48 +1,48 @@
-import { fromEvent } from "rxjs";
+import { fromEvent, Subject } from "rxjs";
+import WORDS_LIST from "./wordsList.json";
 
-const letterRows = document.getElementsByClassName('letter-row');
-
+const letterRows = document.getElementsByClassName("letter-row");
 const onKeyDown$ = fromEvent(document, "keydown");
 let letterIndex = 0;
 let letterRowIndex = 0;
-const letterGrid = Array.from(letterRows).map(row => Array.from(row.children).map(() => ''));
+let userAnswer = [];
+const getRandomWord = () =>
+    WORDS_LIST[Math.floor(Math.random() * WORDS_LIST.length)];
+let rightWord = getRandomWord();
+console.log(`Right word: ${rightWord}`);
+
+const userWinOrLoose$ = new Subject();
 
 const insertLetter = {
     next: (event) => {
         const pressedKey = event.key.toUpperCase();
         if (pressedKey.length === 1 && pressedKey.match(/[a-z]/i)) {
-            if (letterRowIndex < letterRows.length && letterIndex < letterRows[letterRowIndex].children.length) {
-                let letterBox = letterRows[letterRowIndex].children[letterIndex];
-                letterBox.textContent = pressedKey;
-                letterBox.classList.add('filled-letter');
-                letterGrid[letterRowIndex][letterIndex] = pressedKey;
-                letterIndex++;
-            }
+            let letterBox =
+                Array.from(letterRows)[letterRowIndex].children[letterIndex];
+            letterBox.textContent = pressedKey;
+            letterBox.classList.add("filled-letter");
+            letterIndex++;
+            userAnswer.push(pressedKey);
         }
-    }
-}
+    },
+};
 
-const deleteLetter = {
+const checkWord = {
     next: (event) => {
-        const deleteKey = event.key;
-        if (deleteKey === 'Backspace') {
-            if (letterIndex > 0) {
-                letterIndex--;
-                let letterBox = letterRows[letterRowIndex].children[letterIndex];
-                letterBox.textContent = '';
-                letterBox.classList.remove('filled-letter');
-                letterGrid[letterRowIndex][letterIndex] = '';
-            } else if (letterRowIndex > 0) {
-                letterRowIndex--;
-                letterIndex = letterRows[letterRowIndex].children.length - 1;
-                let letterBox = letterRows[letterRowIndex].children[letterIndex];
-                letterBox.textContent = '';
-                letterBox.classList.remove('filled-letter');
-                letterGrid[letterRowIndex][letterIndex] = '';
+        if (event.key === "Enter") {
+            if (userAnswer.join("") === rightWord) {
+                userWinOrLoose$.next();
             }
         }
-    }
-}
+    },
+};
 
 onKeyDown$.subscribe(insertLetter);
-onKeyDown$.subscribe(deleteLetter);
+onKeyDown$.subscribe(checkWord);
+
+userWinOrLoose$.subscribe(() => {
+    let letterRowsWinned = letterRows[letterRowIndex];  
+    for (let i = 0; i < 5; i++) {
+        letterRowsWinned.children[i].classList.add("letter-green");
+    }
+});
