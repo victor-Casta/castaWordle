@@ -1,0 +1,11 @@
+# Ignorar archivos de configuración específicos
+config.ini
+
+# Ignorar archivos binarios
+*.exe
+*.dll
+*.so
+
+# Ignorar archivos generados por el entorno de desarrollo
+.vscode/
+node_modules/
